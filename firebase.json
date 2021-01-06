@@ -3,11 +3,6 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "functions": {
-    "predeploy": [
-      
-    ]
-  },
   "emulators": {
     "auth": {
       "port": 9099
@@ -24,8 +19,5 @@
     "ui": {
       "enabled": true
     }
-  },
-  "remoteconfig": {
-    "template": "remoteconfig.template.json"
   }
 }
