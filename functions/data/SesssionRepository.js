@@ -32,7 +32,7 @@ module.exports = (db) => {
     modules.findSession = (_sessionId) => {
         return SESSION_COLLECTION.doc(_sessionId).get().then( (doc) => {
             let session = doc.data()
-            session.id = doc.id
+            session.sessionId = doc.id
             return Promise.resolve(session)
         })
     }
