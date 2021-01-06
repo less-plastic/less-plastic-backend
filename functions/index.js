@@ -10,7 +10,7 @@ const sessionRepository = require('./data/SesssionRepository')(db)
 const onBoardingRepository = require('./data/OnBoardingRepository')(db)
 
 const onboardingApp = express()
-//onboardingApp.use(cors({ origin: true }))
+onboardingApp.use(cors({ origin: true }))
 
 
 // API Onboarding
