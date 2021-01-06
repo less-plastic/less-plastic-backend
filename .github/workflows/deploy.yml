@@ -16,8 +16,8 @@ jobs:
         uses: styfle/cancel-workflow-action@0.6.0
         with:
           access_token: ${{ github.token }}
-  build:
-    name: Build
+  build_deploy:
+    name: Build & Deploy
     needs: pre_deploy
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -31,32 +31,20 @@ jobs:
       - name: Make envfile
         run: |
           touch functions/.env
-      - name: Archive Production Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: dist
-          path: .
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@master
-      - name: Download Artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: dist
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
           args: deploy
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      - name: Archive Production Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: .
   post_deploy:
     name: Post Deploy
-    needs: deploy
+    needs: build_deploy
     runs-on: ubuntu-latest
     steps:
       - name: Start Clear artifact
