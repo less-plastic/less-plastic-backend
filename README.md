@@ -8,9 +8,9 @@ The purpose of this project is to create a server-less backend used by mobile ap
 
 ## API
 The APIs are three:
-- POST ```/onboarding``` to create an onboarding session
-- GET ```/onboarding/:sessionId``` to fetch the current session status
-- PATCH ```/onboarding/:sessionId``` to update the current onboarding
+- POST ```/flow``` to create an onboarding session
+- GET ```/flow/:sessionId``` to fetch the current session status
+- PATCH ```/flow/:sessionId``` to update the current onboarding
 
 ## Tracking
 TBD

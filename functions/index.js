@@ -1,7 +1,7 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 const express = require('express')
-//const cors = require('cors')
+const cors = require('cors')
 
 admin.initializeApp()
 const db = admin.firestore()
@@ -9,8 +9,8 @@ const db = admin.firestore()
 const sessionRepository = require('./data/SesssionRepository')(db)
 const onBoardingRepository = require('./data/OnBoardingRepository')(db)
 
-const onboardingApp = express()
-onboardingApp.use(cors({ origin: true }))
+const flowApiApp = express()
+flowApiApp.use(cors({ origin: true }))
 
 
 // API Onboarding
@@ -18,10 +18,10 @@ onboardingApp.use(cors({ origin: true }))
 /**
  * Create a new onboarding session
  */
-onboardingApp.post('/', (req, res) => {
+flowApiApp.post('/', (req, res) => {
     // pass user id
     var fetchedSession = {}
-    sessionRepository.createSession('session').then( (session) => {
+    sessionRepository.createSession('fake-user-id').then( (session) => {
         fetchedSession = session
         return onBoardingRepository.getStep(session.currentStepId)
     }).then( (step) => {
@@ -30,13 +30,12 @@ onboardingApp.post('/', (req, res) => {
     }).catch( (e) => {
         res.json(e)
     })
-
 })
 
 /**
  * Get session by id
  */
-onboardingApp.get('/:id', (req, res) => {
+flowApiApp.get('/:id', (req, res) => {
     var fetchedSession = {}
     sessionRepository.findSession(req.params.id).then( (session) => {
         fetchedSession = session
@@ -54,7 +53,7 @@ onboardingApp.get('/:id', (req, res) => {
 /**
  * Update session
  */
-onboardingApp.patch('/:id', (req, res) => {
+flowApiApp.patch('/:id', (req, res) => {
     /**
      * {
      *  "questionStepId": "uuid",
@@ -66,11 +65,20 @@ onboardingApp.patch('/:id', (req, res) => {
     let sessionId = req.params.id
     sessionRepository.findSession(sessionId).then( (session) => {
         onBoardingRepository.getStep(body.answerStepId).then( (step) => {
-            //TODO emit event
             sessionRepository.updateSession(sessionId, {
                 currentStepId: step.id
             }).then( () => {
-                res.status(204).send()
+                sessionRepository.trackAnswer(
+                    sessionId,
+                    body.questionStepId,
+                    body.answerStepId,
+                    body.data
+                ).then( () => {
+                    res.status(204).send()
+                }).catch( (e) => {
+                    console.log(e)
+                    res.status(204).send()
+                })
             }).catch( (e) => {
                 console.log(e)
                 res.status(500).send({
@@ -92,4 +100,4 @@ onboardingApp.patch('/:id', (req, res) => {
 });
 
 // Expose Express API as a single Cloud Function:
-exports.flow = functions.https.onRequest(onboardingApp);
+exports.flow = functions.region('europe-west2').https.onRequest(flowApiApp);
