@@ -92,4 +92,4 @@ onboardingApp.patch('/:id', (req, res) => {
 });
 
 // Expose Express API as a single Cloud Function:
-exports.wizard = functions.https.onRequest(onboardingApp);
+exports.flow = functions.https.onRequest(onboardingApp);
