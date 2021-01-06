@@ -2,6 +2,10 @@ module.exports = (db) => {
     let modules = {}
     const stepCollection = db.collection('steps')
 
+    /**
+     * Return requested step
+     * @param {String} _stepId 
+     */
     modules.getStep = (_stepId) => {
         return stepCollection.doc(_stepId)
             .get()
