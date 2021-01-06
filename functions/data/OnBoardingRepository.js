@@ -1,42 +1,39 @@
 module.exports = (db) => {
-    let modules = {}
-    const stepCollection = db.collection('steps')
+    const modules = {}
+    const STEP_COLLECTION = db.collection('steps')
 
     /**
      * Return requested step
      * @param {String} _stepId 
      */
     modules.getStep = (_stepId) => {
-        return stepCollection.doc(_stepId)
-            .get()
-            .then((doc) => {
-                if (doc.exists) {
-                    let dataStep = doc.data()
-                    dataStep.id = doc.id
-                    switch (dataStep.type) {
-                        case 'selection':
-                            if (dataStep.options) {
-                                return Promise.all(dataStep.options.map( ref => ref.get() )).then( (options) => {
-                                    dataStep.options = options.map( (doc) => {
-                                        let item = doc.data()
-                                        item.id = doc.id
-                                        return item
-                                    })
-                                    return Promise.resolve(dataStep)
+        return STEP_COLLECTION.doc(_stepId).get().then((doc) => {
+            if (doc.exists) {
+                let dataStep = doc.data()
+                dataStep.id = doc.id
+                switch (dataStep.type) {
+                    case 'selection':
+                        if (dataStep.options) {
+                            return Promise.all(dataStep.options.map( ref => ref.get() )).then( (options) => {
+                                dataStep.options = options.map( (doc) => {
+                                    let item = doc.data()
+                                    item.id = doc.id
+                                    return item
                                 })
-                            } else {
                                 return Promise.resolve(dataStep)
-                            }
-                            break
-                        default:
+                            })
+                        } else {
                             return Promise.resolve(dataStep)
-                            break
-                    }
-                    
-                } else {
-                    throw 'Step with id {' + _stepId + '} not found'
+                        }
+
+                    default:
+                        return Promise.resolve(dataStep)
                 }
-            })
+                
+            } else {
+                throw {err: 'step_id_not_found', message: 'Step with id {' + _stepId + '} not found'}
+            }
+        })
     }
     
     return modules

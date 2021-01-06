@@ -1,10 +1,11 @@
 const { v4: uuidv4 } = require('uuid');
+const admin = require('firebase-admin');
 
 module.exports = (db) => {
     const modules = {}
-    const sessionCollection = db.collection('sessions')
+    const SESSION_COLLECTION = db.collection('sessions')
 
-    const entryPointStep = '94c6ef59-f447-4713-ae8c-1bad2f6afab8'
+    const ENTRY_POINT_STEP_ID = 'c09528b8-4ece-4bd8-a925-df956cc987b0'
     
     /**
      * Create a new session
@@ -12,9 +13,11 @@ module.exports = (db) => {
      */
     modules.createSession = (_userId) => {
         let sessionId = uuidv4()
-        return sessionCollection.doc(sessionId).set({
+        return SESSION_COLLECTION.doc(sessionId).set({
             userId: _userId,
-            currentStepId: entryPointStep
+            currentStepId: ENTRY_POINT_STEP_ID,
+            updatedAt: Date(),
+            createdAt: Date()
         }).then( () => {
             return modules.findSession(sessionId)
         }).then( (session) => {
@@ -27,7 +30,7 @@ module.exports = (db) => {
      * @param {String} _sessionId 
      */
     modules.findSession = (_sessionId) => {
-        return sessionCollection.doc(_sessionId).get().then( (doc) => {
+        return SESSION_COLLECTION.doc(_sessionId).get().then( (doc) => {
             let session = doc.data()
             session.id = doc.id
             return Promise.resolve(session)
@@ -41,9 +44,31 @@ module.exports = (db) => {
      */
     modules.updateSession = (_sessionId, _data) => {
         return modules.findSession(_sessionId).then( (session) => {
-            return sessionCollection.doc(_sessionId).update({
-                currentStepId: _data.currentStepId || session.currentStepId
+            return SESSION_COLLECTION.doc(_sessionId).update({
+                currentStepId: _data.currentStepId || session.currentStepId,
+                updatedAt: Date()
             })
+        })
+    }
+
+     /**
+     * Track an user's answer
+     * @param {String} _sessionId 
+     * @param {String} _questionId 
+     * @param {String} _answerId 
+     * @param {String} _data 
+     */
+    modules.trackAnswer = (_sessionId, _questionId, _answerId, _data) => {
+        let event = {
+            questionId: _questionId,
+            answerId: _answerId,
+            data: _data || "",
+            eventDate: Date()
+        }
+
+        return SESSION_COLLECTION.doc(_sessionId).update({ 
+            answers: admin.firestore.FieldValue.arrayUnion(event),
+            updatedAt: Date()
         })
     }
 
