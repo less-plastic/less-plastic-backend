@@ -6,6 +6,11 @@ module.exports = (db) => {
     const SESSION_COLLECTION = db.collection('sessions')
 
     const ENTRY_POINT_STEP_ID = 'c09528b8-4ece-4bd8-a925-df956cc987b0'
+
+
+    const remapSession = (session) => {
+
+    }
     
     /**
      * Create a new session
@@ -31,9 +36,18 @@ module.exports = (db) => {
      */
     modules.findSession = (_sessionId) => {
         return SESSION_COLLECTION.doc(_sessionId).get().then( (doc) => {
-            let session = doc.data()
-            session.sessionId = doc.id
-            return Promise.resolve(session)
+            if (doc.exists) {
+                let session = doc.data()
+                return Promise.resolve({
+                    sessionId: doc.id,
+                    userId: session.userId,
+                    currentStepId: session.currentStepId,
+                    updatedAt: session.updatedAt,
+                    createdAt: session.createdAt
+                })
+            } else {
+                throw {err: 'session_not_found'}
+            }
         })
     }
 
@@ -61,7 +75,7 @@ module.exports = (db) => {
     modules.trackAnswer = (_sessionId, _questionId, _answerId, _data) => {
         let event = {
             questionId: _questionId,
-            answerId: _answerId,
+            answerId: _answerId || "",
             data: _data || "",
             eventDate: Date()
         }

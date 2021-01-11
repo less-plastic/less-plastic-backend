@@ -44,8 +44,9 @@ flowApiApp.get('/:id', (req, res) => {
         fetchedSession.step = step
         res.json(fetchedSession)
     }).catch( (e) => {
+        console.log(e)
         res.status(500).json({
-            err: JSON.stringify(e)
+            err: e.err
         })
     })
 });
@@ -56,22 +57,27 @@ flowApiApp.get('/:id', (req, res) => {
 flowApiApp.patch('/:id', (req, res) => {
     /**
      * {
-     *  "questionStepId": "uuid",
-     *  "answerStepId": "uuid",
+     *  "currentStepId": "uuid",
+     *  "optionSelected": "uuid",
      *  "data": "plain-text"
      * }
      */
     let body = req.body
     let sessionId = req.params.id
     sessionRepository.findSession(sessionId).then( (session) => {
-        onBoardingRepository.getStep(body.answerStepId).then( (step) => {
+        onBoardingRepository.getNextStep({
+            currentStepId: body.currentStepId,
+            optionSelected: body.optionSelected,
+            data: body.data
+        }, session).then((step) => {
+            console.log(step)
             sessionRepository.updateSession(sessionId, {
                 currentStepId: step.id
             }).then( () => {
                 sessionRepository.trackAnswer(
                     sessionId,
-                    body.questionStepId,
-                    body.answerStepId,
+                    body.currentStepId,
+                    body.optionSelected,
                     body.data
                 ).then( () => {
                     res.status(204).send()
@@ -82,13 +88,13 @@ flowApiApp.patch('/:id', (req, res) => {
             }).catch( (e) => {
                 console.log(e)
                 res.status(500).send({
-                    err: 'Error on update your choose'
+                    err: 'Error on session updating'
                 })
             })
         }).catch( (e) => {
             console.log(e)
             res.status(400).json({
-                err: 'Step id not valid'
+                err: 'Payload not valid' + 'error_code:' + e.err
             })        
         })
     }).catch( (e) => {
